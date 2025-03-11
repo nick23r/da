@@ -9,23 +9,29 @@ header('location:index.php');
 else{
 // Code for change password	
 if(isset($_POST['submit']))
-  {
-    $adminid=$_SESSION['alogin'];
-    $AName=$_POST['adminname'];
-  $mobno=$_POST['mobilenumber'];
-  $email=$_POST['email'];
-  $sql="update tbladmin set AdminName=:adminname,MobileNumber=:mobilenumber,Email=:email where UserName=:aid";
-     $query = $dbh->prepare($sql);
-     $query->bindParam(':adminname',$AName,PDO::PARAM_STR);
-     $query->bindParam(':email',$email,PDO::PARAM_STR);
-     $query->bindParam(':mobilenumber',$mobno,PDO::PARAM_STR);
-     $query->bindParam(':aid',$adminid,PDO::PARAM_STR);
-$query->execute();
-
-    echo '<script>alert("Your profile has been updated")</script>';
-    echo "<script>window.location.href ='profile.php'</script>";
-
-  }
+	{
+$password=md5($_POST['password']);
+$newpassword=md5($_POST['newpassword']);
+$username=$_SESSION['alogin'];
+$sql ="SELECT Password FROM tbladmin WHERE UserName=:username and Password=:password";
+$query= $dbh -> prepare($sql);
+$query-> bindParam(':username', $username, PDO::PARAM_STR);
+$query-> bindParam(':password', $password, PDO::PARAM_STR);
+$query-> execute();
+$results = $query -> fetchAll(PDO::FETCH_OBJ);
+if($query -> rowCount() > 0)
+{
+$con="update tbladmin set Password=:newpassword where UserName=:username";
+$chngpwd1 = $dbh->prepare($con);
+$chngpwd1-> bindParam(':username', $username, PDO::PARAM_STR);
+$chngpwd1-> bindParam(':newpassword', $newpassword, PDO::PARAM_STR);
+$chngpwd1->execute();
+$msg="Your Password succesfully changed";
+}
+else {
+$error="Your current password is not valid.";	
+}
+}
 ?>
 
 <!doctype html>
@@ -57,7 +63,18 @@ $query->execute();
 	<link rel="stylesheet" href="css/awesome-bootstrap-checkbox.css">
 	<!-- Admin Stye -->
 	<link rel="stylesheet" href="css/style.css">
-
+<script type="text/javascript">
+function valid()
+{
+if(document.chngpwd.newpassword.value!= document.chngpwd.confirmpassword.value)
+{
+alert("New Password and Confirm Password Field do not match  !!");
+document.chngpwd.confirmpassword.focus();
+return false;
+}
+return true;
+}
+</script>
   <style>
 		.errorWrap {
     padding: 10px;
@@ -90,68 +107,44 @@ $query->execute();
 				<div class="row">
 					<div class="col-md-12">
 					
-						<h2 class="page-title">Admin Profile</h2>
+						<h2 class="page-title">Change Password</h2>
 
 						<div class="row">
 							<div class="col-md-10">
 								<div class="panel panel-default">
 									<div class="panel-heading">Form fields</div>
 									<div class="panel-body">
-										<form method="post" class="form-horizontal" onSubmit="return valid();">
+										<form method="post" name="chngpwd" class="form-horizontal" onSubmit="return valid();">
 										
 											
-  	        	 <?php
-
-$sql="SELECT * from  tbladmin";
-$query = $dbh -> prepare($sql);
-$query->execute();
-$results=$query->fetchAll(PDO::FETCH_OBJ);
-$cnt=1;
-if($query->rowCount() > 0)
-{
-foreach($results as $row)
-{               ?>
-											
+  	        	  <?php if($error){?><div class="errorWrap"><strong>ERROR</strong>:<?php echo htmlentities($error); ?> </div><?php } 
+				else if($msg){?><div class="succWrap"><strong>SUCCESS</strong>:<?php echo htmlentities($msg); ?> </div><?php }?>
+											<div class="form-group">
+												<label class="col-sm-4 control-label">Current Password</label>
+												<div class="col-sm-8">
+													<input type="password" class="form-control" name="password" id="password" required>
+												</div>
+											</div>
 											<div class="hr-dashed"></div>
 											
 											<div class="form-group">
-												<label class="col-sm-4 control-label">Admin Name</label>
+												<label class="col-sm-4 control-label">New Password</label>
 												<div class="col-sm-8">
-													<input type="text" name="adminname" value="<?php  echo $row->AdminName;?>" class="form-control" required='true'>
+													<input type="password" class="form-control" name="newpassword" id="newpassword" required>
 												</div>
 											</div>
 											<div class="hr-dashed"></div>
 
 											<div class="form-group">
-												<label class="col-sm-4 control-label">User Name</label>
+												<label class="col-sm-4 control-label">Confirm Password</label>
 												<div class="col-sm-8">
-													<input type="text" name="username" value="<?php  echo $row->UserName;?>" class="form-control" readonly="">
+													<input type="password" class="form-control" name="confirmpassword" id="confirmpassword" required>
 												</div>
 											</div>
 											<div class="hr-dashed"></div>
-										<div class="form-group">
-												<label class="col-sm-4 control-label">Contact Number</label>
-												<div class="col-sm-8">
-													<input type="text" name="mobilenumber" value="<?php  echo $row->MobileNumber;?>"  class="form-control" maxlength='10' required='true' pattern="[0-9]+">
-												</div>
-											</div>
-											<div class="hr-dashed"></div>
-											<div class="form-group">
-												<label class="col-sm-4 control-label">Email</label>
-												<div class="col-sm-8">
-													<input type="email" name="email" value="<?php  echo $row->Email;?>" class="form-control" required='true'>
-												</div>
-											</div>
-											<div class="hr-dashed"></div>
-								<div class="hr-dashed"></div>
-											<div class="form-group">
-												<label class="col-sm-4 control-label">Admin Registration Date</label>
-												<div class="col-sm-8">
-													 <input type="text" name="" value="<?php  echo $row->AdminRegdate;?>" readonly="" class="form-control">
-												</div>
-											</div>
-											<div class="hr-dashed"></div>
-											<?php $cnt=$cnt+1;}} ?>
+										
+								
+											
 											<div class="form-group">
 												<div class="col-sm-8 col-sm-offset-4">
 								
